@@ -3,7 +3,7 @@
 
 # ISO 14977 standardize The Extended Backus-Naur Form(EBNF) syntax.
 # You can read a final draft version here:
-# http://www.cl.cam.ac.uk/~mgk25/iso-ebnf.html
+# https://www.cl.cam.ac.uk/~mgk25/iso-ebnf.html
 #
 # Submitted 2004 by Seo Sanghyeon
 #
@@ -55,7 +55,7 @@ syntax.ignore(ebnfComment)
 
 def do_integer(str, loc, toks):
     return int(toks[0])
-    
+
 def do_meta_identifier(str, loc, toks):
     if toks[0] in symbol_table:
         return symbol_table[toks[0]]

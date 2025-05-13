@@ -1,6 +1,6 @@
 # rangeCheck.py
 #
-#   A sample program showing how parse actions can convert parsed 
+#   A sample program showing how parse actions can convert parsed
 # strings into a data type or object, and to validate the parsed value.
 #
 # Updated to use new addCondition method and expr() copy.
@@ -8,7 +8,7 @@
 # Copyright 2011,2015 Paul T. McGuire
 #
 
-from pyparsing import Word, nums, Suppress, ParseException, empty, Optional
+from pyparsing import Word, nums, Suppress, Optional
 from datetime import datetime
 
 def ranged_value(expr, minval=None, maxval=None):
@@ -26,7 +26,7 @@ def ranged_value(expr, minval=None, maxval=None):
     outOfRangeMessage = {
         (True, False)  : "value is greater than %s" % maxval,
         (False, True)  : "value is less than %s" % minval,
-        (False, False) : "value is not in the range (%s to %s)" % (minval,maxval),
+        (False, False) : "value is not in the range ({0} to {1})".format(minval,maxval),
         }[minval is None, maxval is None]
 
     return expr().addCondition(inRangeCondition, message=outOfRangeMessage)
@@ -38,7 +38,7 @@ integer.setParseAction(lambda t:int(t[0]))
 month = ranged_value(integer, 1, 12)
 day = ranged_value(integer, 1, 31)
 year = ranged_value(integer, 2000, None)
-    
+
 SLASH = Suppress('/')
 dateExpr = year("year") + SLASH + month("month") + Optional(SLASH + day("day"))
 dateExpr.setName("date")
@@ -58,5 +58,3 @@ dateExpr.runTests("""
     2004/2/29
     2004/2
     1999/12/31""")
-
-

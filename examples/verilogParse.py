@@ -19,8 +19,8 @@
 #
 # If you find this software to be useful, please make a donation to one
 # of the following charities:
-# - the Red Cross (http://www.redcross.org)
-# - Hospice Austin (http://www.hospiceaustin.org)
+# - the Red Cross (https://www.redcross.org/)
+# - Hospice Austin (https://www.hospiceaustin.org/)
 #
 #    DISCLAIMER:
 #    THIS SOFTWARE IS PROVIDED BY PAUL T. McGUIRE ``AS IS'' AND ANY EXPRESS OR
@@ -61,42 +61,28 @@
 #           for udpInstance.
 #   1.0.11 - Fixed bug in inst_args, content alternatives were reversed
 #
-import pdb
 import time
 import pprint
 import sys
 
 __version__ = "1.0.11"
 
-from pyparsing import Literal, CaselessLiteral, Keyword, Word, OneOrMore, ZeroOrMore, \
-        Forward, NotAny, delimitedList, Group, Optional, Combine, alphas, nums, restOfLine, cStyleComment, \
-        alphanums, printables, dblQuotedString, empty, ParseException, ParseResults, MatchFirst, oneOf, GoToColumn, \
-        ParseResults,StringEnd, FollowedBy, ParserElement, And, Regex, cppStyleComment#,__version__
+from pyparsing import Literal, Keyword, Word, OneOrMore, ZeroOrMore, \
+        Forward, delimitedList, Group, Optional, Combine, alphas, nums, restOfLine, \
+        alphanums, dblQuotedString, empty, ParseException, oneOf, \
+        StringEnd, FollowedBy, ParserElement, Regex, cppStyleComment
 import pyparsing
 usePackrat = False
-usePsyco = False
 
 packratOn = False
-psycoOn = False
 
 if usePackrat:
     try:
         ParserElement.enablePackrat()
-    except:
+    except Exception:
         pass
     else:
         packratOn = True
-
-# comment out this section to disable psyco function compilation
-if usePsyco:
-    try:
-        import psyco
-        psyco.full()
-    except:
-        print("failed to import psyco Python optimizer")
-    else:
-        psycoOn = True
-
 
 def dumpTokens(s,l,t):
     import pprint
@@ -120,12 +106,12 @@ def Verilog_BNF():
 
         identLead = alphas+"$_"
         identBody = alphanums+"$_"
-        identifier1 = Regex( r"\.?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*"
+        identifier1 = Regex( r"\.?["+identLead+"]["+identBody+r"]*(\.["+identLead+"]["+identBody+"]*)*"
                             ).setName("baseIdent")
         identifier2 = Regex(r"\\\S+").setParseAction(lambda t:t[0][1:]).setName("escapedIdent")#.setDebug()
         identifier = identifier1 | identifier2
         assert(identifier2 == r'\abc')
-        
+
         hexnums = nums + "abcdefABCDEF" + "_?"
         base = Regex("'[bBoOdDhH]").setName("base")
         basedNumber = Combine( Optional( Word(nums + "_") ) + base + Word(hexnums+"xXzZ"),
@@ -557,10 +543,10 @@ def Verilog_BNF():
         port = portExpr | Group( ( DOT + identifier + LPAR + portExpr + RPAR ) )
 
         moduleHdr = Group ( oneOf("module macromodule") + identifier +
-                 Optional( LPAR + Group( Optional( delimitedList( 
-                                    Group(oneOf("input output") + 
+                 Optional( LPAR + Group( Optional( delimitedList(
+                                    Group(oneOf("input output") +
                                             (netDecl1Arg | netDecl2Arg | netDecl3Arg) ) |
-                                    port ) ) ) + 
+                                    port ) ) ) +
                             RPAR ) + SEMI ).setName("moduleHdr")
 
         module = Group(  moduleHdr +
@@ -638,7 +624,6 @@ else:
         print(" - using pyparsing version", pyparsing.__version__)
         print(" - using Python version", sys.version)
         if packratOn: print(" - using packrat parsing")
-        if psycoOn: print(" - using psyco runtime optimization")
         print()
 
         import os
@@ -710,7 +695,7 @@ else:
     #~ lp = LineProfiler(ParseResults.__init__)
 
     main()
-    
+
     #~ lp.print_stats()
     #~ import hotshot
     #~ p = hotshot.Profile("vparse.prof",1,1)

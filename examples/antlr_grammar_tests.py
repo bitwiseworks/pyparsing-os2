@@ -6,7 +6,7 @@ Created on 4 sept. 2010
 Submitted by Luca DallOlio, September, 2010
 '''
 import unittest
-import antlr_grammar
+from . import antlr_grammar
 
 class Test(unittest.TestCase):
 
@@ -80,7 +80,11 @@ fragment DIGIT    : '0'..'9' ;"""
         pyparsingRules = antlr_grammar.antlrConverter(antlrGrammarTree)
         pyparsingRule = pyparsingRules["expr"]
         pyparsingTree = pyparsingRule.parseString("2 - 5 * 42 + 7 / 25")
-        self.assertNotEqual(None, pyparsingTree)
+        pyparsingTreeList = pyparsingTree.asList()
+        print(pyparsingTreeList)
+        self.assertEqual(pyparsingTreeList,
+                         [[[['2'], []], [['-', [['5'], [['*', ['4', '2']]]]], ['+', [['7'], [['/', ['2', '5']]]]]]]]
+                         )
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testOptionsSpec']
