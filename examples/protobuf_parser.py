@@ -6,7 +6,7 @@
 #
 
 from pyparsing import (Word, alphas, alphanums, Regex, Suppress, Forward,
-    Group, oneOf, ZeroOrMore, Optional, delimitedList, Keyword,
+    Keyword, Group, oneOf, ZeroOrMore, Optional, delimitedList,
     restOfLine, quotedString, Dict)
 
 ident = Word(alphas+"_",alphanums+"_").setName("identifier")
@@ -14,20 +14,20 @@ integer = Regex(r"[+-]?\d+")
 
 LBRACE,RBRACE,LBRACK,RBRACK,LPAR,RPAR,EQ,SEMI = map(Suppress,"{}[]()=;")
 
-kwds = """message required optional repeated enum extensions extends extend 
+kwds = """message required optional repeated enum extensions extends extend
           to package service rpc returns true false option import"""
 for kw in kwds.split():
-    exec("%s_ = Keyword('%s')" % (kw.upper(), kw))
+    exec("{0}_ = Keyword('{1}')".format(kw.upper(), kw))
 
 messageBody = Forward()
 
 messageDefn = MESSAGE_ - ident("messageId") + LBRACE + messageBody("body") + RBRACE
 
-typespec = oneOf("""double float int32 int64 uint32 uint64 sint32 sint64 
+typespec = oneOf("""double float int32 int64 uint32 uint64 sint32 sint64
                     fixed32 fixed64 sfixed32 sfixed64 bool string bytes""") | ident
 rvalue = integer | TRUE_ | FALSE_ | ident
 fieldDirective = LBRACK + Group(ident + EQ + rvalue) + RBRACK
-fieldDefn = (( REQUIRED_ | OPTIONAL_ | REPEATED_ )("fieldQualifier") - 
+fieldDefn = (( REQUIRED_ | OPTIONAL_ | REPEATED_ )("fieldQualifier") -
               typespec("typespec") + ident("ident") + EQ + integer("fieldint") + ZeroOrMore(fieldDirective) + SEMI)
 
 # enumDefn ::= 'enum' ident '{' { ident '=' integer ';' }* '}'
@@ -43,8 +43,8 @@ messageExtension = EXTEND_ - ident + LBRACE + messageBody + RBRACE
 messageBody << Group(ZeroOrMore( Group(fieldDefn | enumDefn | messageDefn | extensionsDefn | messageExtension) ))
 
 # methodDefn ::= 'rpc' ident '(' [ ident ] ')' 'returns' '(' [ ident ] ')' ';'
-methodDefn = (RPC_ - ident("methodName") + 
-              LPAR + Optional(ident("methodParam")) + RPAR + 
+methodDefn = (RPC_ - ident("methodName") +
+              LPAR + Optional(ident("methodParam")) + RPAR +
               RETURNS_ + LPAR + Optional(ident("methodReturn")) + RPAR)
 
 # serviceDefn ::= 'service' ident '{' methodDefn* '}'
@@ -66,10 +66,10 @@ parser = Optional(packageDirective) + ZeroOrMore(topLevelStatement)
 parser.ignore(comment)
 
 
-test1 = """message Person { 
-  required int32 id = 1; 
-  required string name = 2; 
-  optional string email = 3; 
+test1 = """message Person {
+  required int32 id = 1;
+  required string name = 2;
+  optional string email = 3;
 }"""
 
 test2 = """package tutorial;

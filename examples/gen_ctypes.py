@@ -43,7 +43,7 @@ typemap = {
     "Bool" : "c_bool",
     "void" : "None",
     }
-    
+
 LPAR,RPAR,LBRACE,RBRACE,COMMA,SEMI = map(Suppress,"(){},;")
 ident = Word(alphas, alphanums + "_")
 integer = Regex(r"[+-]?\d+")
@@ -52,19 +52,19 @@ hexinteger = Regex(r"0x[0-9a-fA-F]+")
 const = Suppress("const")
 primitiveType = oneOf(t for t in typemap if not t.endswith("*"))
 structType = Suppress("struct") + ident
-vartype = (Optional(const) + 
-            (primitiveType | structType | ident) + 
+vartype = (Optional(const) +
+            (primitiveType | structType | ident) +
             Optional(Word("*")("ptr")))
 def normalizetype(t):
     if isinstance(t, ParseResults):
         return ' '.join(t)
         #~ ret = ParseResults([' '.join(t)])
         #~ return ret
-        
+
 vartype.setParseAction(normalizetype)
 
 arg = Group(vartype("argtype") + Optional(ident("argname")))
-func_def = (vartype("fn_type") + ident("fn_name") + 
+func_def = (vartype("fn_type") + ident("fn_name") +
                 LPAR + Optional(delimitedList(arg|"..."))("fn_args") + RPAR + SEMI)
 def derivefields(t):
     if t.fn_args and t.fn_args[-1] == "...":
@@ -74,7 +74,7 @@ func_def.setParseAction(derivefields)
 fn_typedef = "typedef" + func_def
 var_typedef = "typedef" + primitiveType("primType") + ident("name") + SEMI
 
-enum_def = (Keyword("enum") + LBRACE + 
+enum_def = (Keyword("enum") + LBRACE +
             delimitedList(Group(ident("name") + '=' + (hexinteger|integer)("value")))("evalues")
             + Optional(COMMA)
             + RBRACE)
@@ -102,7 +102,7 @@ def getUDType(typestr):
     key = typestr.rstrip(" *")
     if key not in typemap:
         user_defined_types.add(key)
-        typemap[key] = "%s_%s" % (module, key)
+        typemap[key] = "{0}_{1}".format(module, key)
 
 def typeAsCtypes(typestr):
     if typestr in typemap:
@@ -131,7 +131,7 @@ for fn,_,_ in (cStyleComment.suppress() | fn_typedef.suppress() | func_def).scan
         if arg != "...":
             if arg.argtype not in typemap:
                 getUDType(arg.argtype)
-    functions.append(fn)                
+    functions.append(fn)
 
 # scan input header text for enums
 enum_def.ignore(cppStyleComment)
@@ -140,13 +140,13 @@ for en_,_,_ in enum_def.scanString(c_header):
         enum_constants.append( (ev.name, ev.value) )
 
 print("from ctypes import *")
-print("%s = CDLL('%s.dll')" % (module, module))
+print("{0} = CDLL('{1}.dll')".format(module, module))
 print()
 print("# user defined types")
 for tdname,tdtyp in typedefs:
-    print("%s = %s" % (tdname, typemap[tdtyp]))
+    print("{0} = {1}".format(tdname, typemap[tdtyp]))
 for fntd in fn_typedefs:
-    print("%s = CFUNCTYPE(%s)" % (fntd.fn_name,
+    print("{0} = CFUNCTYPE({1})".format(fntd.fn_name,
         ',\n    '.join(typeAsCtypes(a.argtype) for a in fntd.fn_args)))
 for udtype in user_defined_types:
     print("class %s(Structure): pass" % typemap[udtype])
@@ -154,21 +154,19 @@ for udtype in user_defined_types:
 print()
 print("# constant definitions")
 for en,ev in enum_constants:
-    print("%s = %s" % (en,ev))
+    print("{0} = {1}".format(en,ev))
 
 print()
 print("# functions")
 for fn in functions:
-    prefix = "%s.%s" % (module, fn.fn_name)
-    
-    print("%s.restype = %s" % (prefix, typeAsCtypes(fn.fn_type)))
+    prefix = "{0}.{1}".format(module, fn.fn_name)
+
+    print("{0}.restype = {1}".format(prefix, typeAsCtypes(fn.fn_type)))
     if fn.varargs:
         print("# warning - %s takes variable argument list" % prefix)
         del fn.fn_args[-1]
 
     if fn.fn_args.asList() != [['void']]:
-        print("%s.argtypes = (%s,)" % (prefix, ','.join(typeAsCtypes(a.argtype) for a in fn.fn_args)))
+        print("{0}.argtypes = ({1},)".format(prefix, ','.join(typeAsCtypes(a.argtype) for a in fn.fn_args)))
     else:
         print("%s.argtypes = ()" % (prefix))
-        
-

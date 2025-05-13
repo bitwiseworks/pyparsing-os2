@@ -3,16 +3,16 @@ from searchparser import SearchQueryParser
 products = [ "grape juice", "grape jelly", "orange juice", "orange jujubees",
     "strawberry jam", "prune juice", "prune butter", "orange marmalade",
     "grapefruit juice" ]
-    
+
 class FruitSearchParser(SearchQueryParser):
     def GetWord(self, word):
-        return set( p for p in products if p.startswith(word + " ") )
+        return { p for p in products if p.startswith(word + " ") }
 
     def GetWordWildcard(self, word):
-        return set( p for p in products if p.startswith(word[:-1]) )
+        return { p for p in products if p.startswith(word[:-1]) }
 
     def GetQuotes(self, search_string, tmp_result):
-        result = Set()
+        result = set()
         # I have no idea how to use this feature...
         return result
 

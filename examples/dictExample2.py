@@ -6,8 +6,7 @@
 #
 # Copyright (c) 2004, Paul McGuire
 #
-from pyparsing import Literal, Word, Group, Dict, ZeroOrMore, alphas, nums, delimitedList, pyparsing_common
-import pprint
+from pyparsing import Literal, Word, Group, Dict, ZeroOrMore, alphas, nums, delimitedList, pyparsing_common as ppc
 
 testData = """
 +-------+------+------+------+------+------+------+------+------+
@@ -22,7 +21,7 @@ testData = """
 
 # define grammar for datatable
 underline = Word("-=")
-number = pyparsing_common.integer
+number = ppc.integer
 
 vert = Literal("|").suppress()
 
@@ -44,9 +43,9 @@ print("sum(data['min']) =", sum(data['min']))
 print("data.max =", data.max)
 print("sum(data.max) =", sum(data.max))
 
-# now print transpose of data table, using column labels read from table header and 
+# now print transpose of data table, using column labels read from table header and
 # values from data lists
-print() 
+print()
 print(" " * 5, end=' ')
 for i in range(1,len(data)):
     print("|%5s" % data[i][0], end=' ')
@@ -56,4 +55,4 @@ for i in range(len(data.columns)):
     print("%5s" % data.columns[i], end=' ')
     for j in range(len(data) - 1):
         print('|%5s' % data[j + 1][i + 1], end=' ')
-    print() 
+    print()

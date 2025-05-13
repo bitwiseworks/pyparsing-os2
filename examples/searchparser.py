@@ -2,7 +2,7 @@
 
 version 2006-03-09
 
-This search query parser uses the excellent Pyparsing module 
+This search query parser uses the excellent Pyparsing module
 (http://pyparsing.sourceforge.net/) to parse search queries by users.
 It handles:
 
@@ -30,7 +30,7 @@ are permitted provided that the following conditions are met:
 * Redistributions of source code must retain the above copyright notice, this
   list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation 
+  this list of conditions and the following disclaimer in the documentation
   and/or other materials provided with the distribution.
 * Neither the name of Estrate nor the names of its contributors may be used
   to endorse or promote products derived from this software without specific
@@ -41,10 +41,10 @@ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 CONTRIBUTORS:
@@ -57,7 +57,7 @@ TODO:
 - ask someone to check my English texts
 - add more kinds of wildcards ('*' at the beginning and '*' inside a word)?
 """
-from pyparsing import Word, alphanums, Keyword, Group, Combine, Forward, Suppress, Optional, OneOrMore, oneOf
+from pyparsing import Word, alphanums, Keyword, Group, Combine, Forward, Suppress, OneOrMore, oneOf
 
 class SearchQueryParser:
 
@@ -72,12 +72,12 @@ class SearchQueryParser:
             'wordwildcard': self.evaluateWordWildcard,
         }
         self._parser = self.parser()
-    
+
     def parser(self):
         """
         This function returns a parser.
         The grammar should be like most full text search engines (Google, Tsearch, Lucene).
-        
+
         Grammar:
         - a query consists of alphanumeric words, with an optional '*' wildcard
           at the end of a word
@@ -89,19 +89,19 @@ class SearchQueryParser:
         - if an operator is missing, use an 'and' operator
         """
         operatorOr = Forward()
-        
+
         operatorWord = Group(Combine(Word(alphanums) + Suppress('*'))).setResultsName('wordwildcard') | \
                             Group(Word(alphanums)).setResultsName('word')
-        
+
         operatorQuotesContent = Forward()
         operatorQuotesContent << (
             (operatorWord + operatorQuotesContent) | operatorWord
         )
-        
+
         operatorQuotes = Group(
             Suppress('"') + operatorQuotesContent + Suppress('"')
         ).setResultsName("quotes") | operatorWord
-        
+
         operatorParenthesis = Group(
             (Suppress("(") + operatorOr + Suppress(")"))
         ).setResultsName("parenthesis") | operatorQuotes
@@ -117,7 +117,7 @@ class SearchQueryParser:
         ).setResultsName("and") | Group(
             operatorNot + OneOrMore(~oneOf("and or") + operatorAnd)
         ).setResultsName("and") | operatorNot)
-        
+
         operatorOr << (Group(
             operatorAnd + Suppress(Keyword("or", caseless=True)) + operatorOr
         ).setResultsName("or") | operatorAnd)
@@ -158,7 +158,7 @@ class SearchQueryParser:
 
     def evaluateWordWildcard(self, argument):
         return self.GetWordWildcard(argument[0])
-        
+
     def evaluate(self, argument):
         return self._methods[argument.getName()](argument)
 
@@ -184,40 +184,40 @@ class ParserTest(SearchQueryParser):
     tests containts a dictionary with tests and expected results.
     """
     tests = {
-        'help': set([1, 2, 4, 5]),
-        'help or hulp': set([1, 2, 3, 4, 5]),
-        'help and hulp': set([2]),
-        'help hulp': set([2]),
-        'help and hulp or hilp': set([2, 3, 4]),
-        'help or hulp and hilp': set([1, 2, 3, 4, 5]),
-        'help or hulp or hilp or halp': set([1, 2, 3, 4, 5, 6]),
-        '(help or hulp) and (hilp or halp)': set([3, 4, 5]),
-        'help and (hilp or halp)': set([4, 5]),
-        '(help and (hilp or halp)) or hulp': set([2, 3, 4, 5]),
-        'not help': set([3, 6, 7, 8]),
-        'not hulp and halp': set([5, 6]),
-        'not (help and halp)': set([1, 2, 3, 4, 6, 7, 8]),
-        '"help me please"': set([2]),
-        '"help me please" or hulp': set([2, 3]),
-        '"help me please" or (hulp and halp)': set([2]),
-        'help*': set([1, 2, 4, 5, 8]),
-        'help or hulp*': set([1, 2, 3, 4, 5]),
-        'help* and hulp': set([2]),
-        'help and hulp* or hilp': set([2, 3, 4]),
-        'help* or hulp or hilp or halp': set([1, 2, 3, 4, 5, 6, 8]),
-        '(help or hulp*) and (hilp* or halp)': set([3, 4, 5]),
-        'help* and (hilp* or halp*)': set([4, 5]),
-        '(help and (hilp* or halp)) or hulp*': set([2, 3, 4, 5]),
-        'not help* and halp': set([6]),
-        'not (help* and helpe*)': set([1, 2, 3, 4, 5, 6, 7]),
-        '"help* me please"': set([2]),
-        '"help* me* please" or hulp*': set([2, 3]),
-        '"help me please*" or (hulp and halp)': set([2]),
-        '"help me please" not (hulp and halp)': set([2]),
-        '"help me please" hulp': set([2]),
-        'help and hilp and not holp': set([4]),
-        'help hilp not holp': set([4]),
-        'help hilp and not holp': set([4]),
+        'help': {1, 2, 4, 5},
+        'help or hulp': {1, 2, 3, 4, 5},
+        'help and hulp': {2},
+        'help hulp': {2},
+        'help and hulp or hilp': {2, 3, 4},
+        'help or hulp and hilp': {1, 2, 3, 4, 5},
+        'help or hulp or hilp or halp': {1, 2, 3, 4, 5, 6},
+        '(help or hulp) and (hilp or halp)': {3, 4, 5},
+        'help and (hilp or halp)': {4, 5},
+        '(help and (hilp or halp)) or hulp': {2, 3, 4, 5},
+        'not help': {3, 6, 7, 8},
+        'not hulp and halp': {5, 6},
+        'not (help and halp)': {1, 2, 3, 4, 6, 7, 8},
+        '"help me please"': {2},
+        '"help me please" or hulp': {2, 3},
+        '"help me please" or (hulp and halp)': {2},
+        'help*': {1, 2, 4, 5, 8},
+        'help or hulp*': {1, 2, 3, 4, 5},
+        'help* and hulp': {2},
+        'help and hulp* or hilp': {2, 3, 4},
+        'help* or hulp or hilp or halp': {1, 2, 3, 4, 5, 6, 8},
+        '(help or hulp*) and (hilp* or halp)': {3, 4, 5},
+        'help* and (hilp* or halp*)': {4, 5},
+        '(help and (hilp* or halp)) or hulp*': {2, 3, 4, 5},
+        'not help* and halp': {6},
+        'not (help* and helpe*)': {1, 2, 3, 4, 5, 6, 7},
+        '"help* me please"': {2},
+        '"help* me* please" or hulp*': {2, 3},
+        '"help me please*" or (hulp and halp)': {2},
+        '"help me please" not (hulp and halp)': {2},
+        '"help me please" hulp': {2},
+        'help and hilp and not holp': {4},
+        'help hilp not holp': {4},
+        'help hilp and not holp': {4},
     }
 
     docs = {
@@ -230,19 +230,19 @@ class ParserTest(SearchQueryParser):
         7: 'nothing',
         8: 'helper',
     }
-        
+
     index = {
-        'help': set((1, 2, 4, 5)),
-        'me': set((2,)),
-        'please': set((2,)),
-        'hulp': set((2, 3,)),
-        'hilp': set((3, 4,)),
-        'halp': set((5, 6,)),
-        'thinks': set((5,)),
-        'he': set((5, 6,)),
-        'needs': set((5, 6,)),
-        'nothing': set((7,)),
-        'helper': set((8,)),
+        'help': {1, 2, 4, 5},
+        'me': {2},
+        'please': {2},
+        'hulp': {2, 3},
+        'hilp': {3, 4},
+        'halp': {5, 6},
+        'thinks': {5},
+        'he': {5, 6},
+        'needs': {5, 6},
+        'nothing': {7},
+        'helper': {8},
     }
 
     def GetWord(self, word):
@@ -264,7 +264,7 @@ class ParserTest(SearchQueryParser):
             if self.docs[item].count(search_string):
                 result.add(item)
         return result
-    
+
     def GetNot(self, not_set):
         all = set(list(self.docs.keys()))
         return all.difference(not_set)
@@ -284,7 +284,7 @@ class ParserTest(SearchQueryParser):
                 print('>>>>>>>>>>>>>>>>>>>>>>Test ERROR<<<<<<<<<<<<<<<<<<<<<')
             print('')
         return all_ok
-            
+
 if __name__=='__main__':
     if ParserTest().Test():
         print('All tests OK')

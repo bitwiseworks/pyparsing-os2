@@ -10,7 +10,7 @@ __author__ = "Daniel 'Dang' Griffith <pythondev - dang at lazytwinacres . net>"
 
 from pyparsing import Literal, CaselessLiteral, Word, delimitedList \
     , Optional, Combine, Group, alphas, nums, alphanums, Forward \
-    , oneOf, sglQuotedString, OneOrMore, ZeroOrMore, CharsNotIn
+    , oneOf, OneOrMore, ZeroOrMore, CharsNotIn
 
 
 # This converts DFM character constants into Python string (unicode) values.
@@ -101,11 +101,11 @@ hint_attribute_value_pair = hint_attribute + EQUALS + value
 layout_attribute_value_pair = layout_attribute + EQUALS + value
 generic_attribute_value_pair = attribute + EQUALS + value
 attribute_value_pair << Group(
-      category_attribute_value_pair 
-    | event_attribute_value_pair 
-    | font_attribute_value_pair 
-    | hint_attribute_value_pair 
-    | layout_attribute_value_pair 
+      category_attribute_value_pair
+    | event_attribute_value_pair
+    | font_attribute_value_pair
+    | hint_attribute_value_pair
+    | layout_attribute_value_pair
     | generic_attribute_value_pair
     )
 
@@ -161,7 +161,7 @@ def main(testfiles=None, action=printer):
         try:
             retval[f] = object_definition.parseFile(f)
             success += 1
-        except:
+        except Exception:
             failures.append(f)
 
     if failures:
